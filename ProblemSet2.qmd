@@ -1,0 +1,19 @@
+---
+title: "Problem Set 2"
+author: "Rajvi Jasani"
+format: 
+  html:
+    toc: true
+    code-fold: true
+    embed-resources: true
+  pdf: default
+---
+## GitHub Repository
+
+This is the link to my GitHub repository <https://github.com/rajvijasani/STATS506-Problem-Set-2.git>
+
+## Problem 1 - Dice Game
+```{r}
+
+```
+
