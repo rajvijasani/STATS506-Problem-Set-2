@@ -13,6 +13,8 @@ format:
 This is the link to my GitHub repository <https://github.com/rajvijasani/STATS506-Problem-Set-2.git>
 
 ## Problem 1 - Dice Game
+
+a.
 ```{r}
 #' Function to calculate total winnings version 1 (using a loop)
 #'
@@ -130,4 +132,95 @@ play_dice_v4 <- function(n, seed = NULL) {
   return(winnings)
 }
 ```
-**Attribution of source for v3: Used ChatGPT to find a function to get the frequencies for all levels (even if they are zero) AND to find a function to only extract the frequency (without the name of level)**
+*Attribution of source for v3:* Used ChatGPT to find a function to get the frequencies for all levels (even if they are zero) AND to find a function to only extract the frequency (without the name of level)
+
+b.
+
+Version 1
+```{r}
+c(play_dice_v1(3), play_dice_v1(3000))
+```
+Version 2
+```{r}
+c(play_dice_v2(3), play_dice_v2(3000))
+```
+Version 3
+```{r}
+c(play_dice_v3(3), play_dice_v3(3000))
+```
+Version 4
+```{r}
+c(play_dice_v4(3), play_dice_v4(3000))
+```
+
+c.
+
+Results for n = 3, seed = 223
+```{r}
+c(
+  play_dice_v1(3, seed = 223),
+  play_dice_v2(3, seed = 223),
+  play_dice_v3(3, seed = 223),
+  play_dice_v4(3, seed = 223)
+)
+```
+
+Results for n = 3000, seed = 223
+```{r}
+c(
+  play_dice_v1(3000, seed = 223),
+  play_dice_v2(3000, seed = 223),
+  play_dice_v3(3000, seed = 223),
+  play_dice_v4(3000, seed = 223)
+)
+```
+
+d.
+
+Comparison of speeds with n = 1000
+```{r}
+library(microbenchmark)
+microbenchmark(
+  version1 = play_dice_v1(1000, seed = 223),
+  version2 = play_dice_v2(1000, seed = 223),
+  version3 = play_dice_v3(1000, seed = 223),
+  version4 = play_dice_v4(1000, seed = 223)
+)
+```
+We see that there is only a small difference in speeds of version 1 (loop) and version 3 (table). Version 4 (vapply) is the slowest whereas version 2 (vectorization) is the fastest as expected. 
+
+Comparison of speeds with n = 100000
+```{r}
+microbenchmark(
+  version1 = play_dice_v1(100000, seed = 223),
+  version2 = play_dice_v2(100000, seed = 223),
+  version3 = play_dice_v3(100000, seed = 223),
+  version4 = play_dice_v4(100000, seed = 223)
+)
+```
+As number of rolls increased, we can see a significant difference in speeds of version 1 (loop) and version 3 (table) which tells us that loops are not speed-wise efficient for big samples whereas tables, second fastest approach, can be useful for big samples. Version 4 (vapply) is still the slowest by a large margin whereas version 2 (vectorization) is the fastest as expected.
+
+e. 
+
+We will be running 3 simulations of 10000 trials each but with different number of rolls just to be sure that number of rolls does not affect the winnings drastically.
+```{r}
+# number of trials to run
+trials <- 10000
+# we will be running 3 different simulations with different number of rolls in each just to be sure
+# vectors to save winning amounts (or losses) of each trail
+all_winnings_1 <- vector(length = trials)
+all_winnings_2 <- vector(length = trials)
+all_winnings_3 <- vector(length = trials)
+for (i in 1:trials) {
+  # simulation with 10 rolls in each trial
+  all_winnings_1[i] <- play_dice_v2(10)
+  # simulation with 100 rolls in each trial
+  all_winnings_2[i] <- play_dice_v2(100)
+  # simulation with 1000 rolls in each trial
+  all_winnings_3[i] <- play_dice_v2(1000)
+}
+c(mean(all_winnings_1),
+  mean(all_winnings_2),
+  mean(all_winnings_3))
+```
+Each simulation gives a positive mean, i.e. over 10000 trials of 10, 100, or 1000 rolls, the player tends to win money on average. This makes the game biased towards the player, thus unfair. A fair game should have an average around 0, i.e. no gain no loss.
