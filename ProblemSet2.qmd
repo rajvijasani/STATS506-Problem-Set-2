@@ -14,6 +14,120 @@ This is the link to my GitHub repository <https://github.com/rajvijasani/STATS50
 
 ## Problem 1 - Dice Game
 ```{r}
+#' Function to calculate total winnings version 1 (using a loop)
+#'
+#' @param n number of rolls
+#' @param seed to control randomization (if a value is provided)
+#'
+#' @return total winnings
+play_dice_v1 <- function(n, seed = NULL) {
+  if (n < 0) {
+    # checking for a negative input and showing appropriate error
+    stop("number of rolls must be positive")
+  }
+  if (n == 0) {
+    # if no die is rolled (game is not played), winnings=0
+    return(0)
+  }
+  set.seed(seed)
+  rolls <- sample(1:6, n, replace = TRUE)
+  winnings <- 0
+  
+  for (i in rolls) {
+    # -2 for the cost of a roll
+    winnings <- winnings - 2
+    if (i == 3 | i == 5) {
+      winnings <- winnings + (i * 2)
+    }
+    # any other roll wins nothing
+  }
+  return(winnings)
+}
 
+#' Function to calculate total winnings version 2 (using vectorization)
+#'
+#' @param n number of rolls
+#' @param seed to control randomization (if a value is provided)
+#'
+#' @return total winnings
+play_dice_v2 <- function(n, seed = NULL) {
+  if (n < 0) {
+    # checking for a negative input and showing appropriate error
+    stop("number of rolls must be positive")
+  }
+  if (n == 0) {
+    # if no die is rolled (game is not played), winnings=0
+    return(0)
+  }
+  set.seed(seed)
+  rolls <- sample(1:6, n, replace = TRUE)
+  winnings <- 0
+  # desired_rolls is a logical vector which stores
+  # TRUE if a roll is 3 or 5 and FALSE otherwise
+  desired_rolls <- (rolls == 3 | rolls == 5)
+  # multiplying each roll with corresponding logical value and 2
+  # [TRUE->1; FALSE->0]
+  # and subtracting cost of roll
+  # if roll is 3, (3*1*2)-2=4
+  # if roll is 6, (6*0*2)-2=-2
+  winnings_per_roll <- rolls * desired_rolls * 2 - 2
+  return(sum(winnings_per_roll))
+}
+
+#' Function to calculate total winnings version 3 (using table function)
+#'
+#' @param n number of rolls
+#' @param seed to control randomization (if a value is provided)
+#'
+#' @return total winnings
+play_dice_v3 <- function(n, seed = NULL) {
+  if (n < 0) {
+    # checking for a negative input and showing appropriate error
+    stop("number of rolls must be positive")
+  }
+  if (n == 0) {
+    # if no die is rolled (game is not played), winnings=0
+    return(0)
+  }
+  set.seed(seed)
+  rolls <- sample(1:6, n, replace = TRUE)
+  winnings <- 0
+  # collecting the frequencies of rolls in a table form
+  # factor() is used to include levels which have frequency=0 in the table
+  rolls_count <- table(factor(rolls, levels = c(1, 2, 3, 4, 5, 6)))
+  # as.numeric is used to only extract the frequency from the table
+  winnings <- as.numeric(rolls_count[3]) * 6 + as.numeric(rolls_count[5]) * 10 - n * 2
+  return(winnings)
+}
+
+#' Function to calculate total winnings version 4 (using vapply function)
+#'
+#' @param n number of rolls
+#' @param seed to control randomization (if a value is provided)
+#'
+#' @return total winnings
+play_dice_v4 <- function(n, seed = NULL) {
+  if (n < 0) {
+    # checking for a negative input and showing appropriate error
+    stop("number of rolls must be positive")
+  }
+  if (n == 0) {
+    # if no die is rolled (game is not played), winnings=0
+    return(0)
+  }
+  set.seed(seed)
+  rolls <- sample(1:6, n, replace = TRUE)
+  winnings <- 0
+  # applying function to return winnings (except cost of roll) of each roll
+  # on all samples in the rolls vector,
+  # summing the winnings and subtracting the costs all of rolls
+  winnings <- sum(vapply(rolls, function(i) {
+    if (i == 3 | i == 5) {
+      return(i * 2)
+    }
+    return(0)
+  }, 1)) - (n * 2)
+  return(winnings)
+}
 ```
-
+**Attribution of source for v3: Used ChatGPT to find a function to get the frequencies for all levels (even if they are zero) AND to find a function to only extract the frequency (without the name of level)**
