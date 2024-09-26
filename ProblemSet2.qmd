@@ -4,7 +4,6 @@ author: "Rajvi Jasani"
 format: 
   html:
     toc: true
-    code-fold: true
     embed-resources: true
   pdf: default
 ---
@@ -14,7 +13,7 @@ This is the link to my GitHub repository <https://github.com/rajvijasani/STATS50
 
 ## Problem 1 - Dice Game
 
-a.
+a. 
 ```{r}
 #' Function to calculate total winnings version 1 (using a loop)
 #'
@@ -224,3 +223,115 @@ c(mean(all_winnings_1),
   mean(all_winnings_3))
 ```
 Each simulation gives a positive mean, i.e. over 10000 trials of 10, 100, or 1000 rolls, the player tends to win money on average. This makes the game biased towards the player, thus unfair. A fair game should have an average around 0, i.e. no gain no loss.
+
+## Problem 2 - Linear Regression
+
+a.
+```{r}
+setwd("E:/UM/STATS 506/Repos/STATS506-Problem-Set-2")
+# assigning new column names for the data frame
+col_names <- c(
+  "height",
+  "length",
+  "width",
+  "driveline",
+  "engine_type",
+  "hybrid",
+  "gears",
+  "transmission",
+  "city_mpg",
+  "fuel_type",
+  "highway_mpg",
+  "classification",
+  "id",
+  "make",
+  "model_year",
+  "year",
+  "horsepower",
+  "torque"
+)
+# importing the data set
+cars <- read.csv("data/cars.csv", col.names = col_names)
+```
+
+b.
+```{r}
+# number of observations before restricting the dataset
+nrow(cars)
+cars <- cars[cars$fuel_type == "Gasoline", ]
+# number of observations before restricting the dataset
+nrow(cars)
+```
+c.
+```{r}
+# exploratory data analysis to check if highway_mpg variable needs transformation
+hist(cars$highway_mpg)
+c(min(cars$highway_mpg), max(cars$highway_mpg))
+library(e1071)
+skewness(cars$highway_mpg)
+tail(table(cars$highway_mpg))
+```
+From looking at the histogram, min-max values and skewness coefficient of the highway_mpg variable, I can notice that the distribution is skewed. After looking at the table of highway_mpg values I can understand that the maximum value is probably an outlier and unrealistic in a real-world case, but as the question does not mention if it is okay to remove this outlier, I am going to take it as a realistic value and remove the skewness by log transformation of the highway_mpg variable.
+```{r}
+# log transformation of highway_mpg
+cars$log_highway_mpg <- log(cars$highway_mpg)
+hist(cars$log_highway_mpg)
+c(min(cars$log_highway_mpg), max(cars$log_highway_mpg))
+```
+*Attribution of source:* Used ChatGPT to find the library and function to calculate skewness.
+
+d.
+```{r}
+# modeling a linear regression model
+lm_model <- lm(log_highway_mpg ~ torque + horsepower + height + length +
+                 width + as.factor(year),
+               data = cars)
+summary(lm_model)
+```
+The torque coefficient is -2.294e-03 with a near zero p-value. This means that torque has a strong, statistically significant, negative effect on highway mpg, i.e. as torque increases, highway mpg decreases.
+
+e.
+```{r}
+library(emmeans)
+# modeling a linear regression model with interaction term
+int_lm_model <- lm(log_highway_mpg ~ torque * horsepower + height + length +
+                     width + as.factor(year),
+                   data = cars)
+summary(int_lm_model)
+```
+To choose reasonable values of torque and horsepower, we can look at their histograms
+```{r}
+# to show 2 plots in one row
+par(mfrow = c(1, 2))
+hist(cars$torque)
+hist(cars$horsepower)
+```
+
+Torque ranges from 150 to 450 approximately and I have taken horsepower values of 150, 250 and 350 as they cover the distribution of horsepower satisfactorily.
+```{r}
+# plotting the interaction between torque an horsepower
+emmip(int_lm_model,
+      horsepower ~ torque,
+      at = list(
+        torque = seq(150, 450, 100),
+        horsepower = c(150, 250, 350)
+      ))
+```
+We can see that for all the chosen horsepower values, the trend in change of torque is consistent. 
+
+f.
+
+$\hat{\beta} = (X^T X)^{-1} X^T y$
+
+*Attribution of source:* Used ChatGPT for showing this formula on the doc.
+```{r}
+# preparing design matrix X for manual calculation of beta
+X <- model.matrix(log_highway_mpg ~ torque * horsepower + height + length +
+                    width + as.factor(year),
+                  data = cars)
+y <- cars$log_highway_mpg
+beta_hat <- solve(t(X) %*% X) %*% t(X) %*% y
+# combining lm coefficients and manual coefficients column-wise for ease of viewing
+cbind(int_lm_model$coefficients, beta_hat)
+```
+We can see that we get the same values of coefficients from the manual calculation of beta hat (column 2) as we got from the lm model (column 1).
